@@ -615,8 +615,6 @@ t_symbol *binbuf_realizedollsym(t_symbol *s, int ac, t_atom *av, int tonew)
 #define ATOMS_FREEA(x, n) (freebytes((x), (n) * sizeof(t_atom)))
 #endif
 
-/* if gl is 0 we get the current canvas. this is the default for object boxes,
-   message boxes pass their glist explicitly. */
 void binbuf_doeval(t_binbuf *x, t_pd *target, int argc, const t_atom *argv, int dollarzero)
 {
     t_atom smallstack[SMALLMSG], *mstack, *msp;
