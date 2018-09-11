@@ -584,7 +584,7 @@ done:
 }
 
 /* for compatibility */
-t_symbol *binbuf_realizedollsym(t_symbol *s, int ac, t_atom *av, int tonew)
+t_symbol *binbuf_realizedollsym(t_symbol *s, int ac, const t_atom *av, int tonew)
 {
     binbuf_dorealizedollsym(s, ac, av, tonew, canvas_getdollarzero());
 }
@@ -615,7 +615,7 @@ t_symbol *binbuf_realizedollsym(t_symbol *s, int ac, t_atom *av, int tonew)
 #define ATOMS_FREEA(x, n) (freebytes((x), (n) * sizeof(t_atom)))
 #endif
 
-void binbuf_doeval(t_binbuf *x, t_pd *target, int argc, const t_atom *argv, int dollarzero)
+void binbuf_doeval(const t_binbuf *x, t_pd *target, int argc, const t_atom *argv, int dollarzero)
 {
     t_atom smallstack[SMALLMSG], *mstack, *msp;
     const t_atom *at = x->b_vec;
@@ -811,7 +811,7 @@ broken:
 }
 
 /* for compatibility */
-void binbuf_eval(t_binbuf *x, t_pd *target, int argc, t_atom *argv)
+void binbuf_eval(const t_binbuf *x, t_pd *target, int argc, const t_atom *argv)
 {
     binbuf_doeval(x, target, argc, argv, canvas_getdollarzero());
 }
