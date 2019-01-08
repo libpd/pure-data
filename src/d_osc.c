@@ -18,7 +18,7 @@
 #endif
 
 #if defined(__linux__) || defined(__CYGWIN__) || defined(__GNU__) || \
-    defined(ANDROID)
+    defined(ANDROID) || defined(__EMSCRIPTEN__)
 #include <endian.h>
 #endif
 
