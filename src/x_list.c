@@ -757,6 +757,96 @@ static void list_tosymbol_setup(void)
     class_sethelpsymbol(list_tosymbol_class, &s_list);
 }
 
+/* ------------- list foreach --------------------- */
+
+t_class *list_foreach_class;
+
+typedef struct _list_foreach
+{
+    t_object x_obj;
+    t_outlet *x_out1;
+    t_outlet *x_out2;
+    t_float x_step;
+} t_list_foreach;
+
+static void *list_foreach_new(t_floatarg f)
+{
+    t_list_foreach *x = (t_list_foreach *)pd_new(list_foreach_class);
+    x->x_out1 = outlet_new(&x->x_obj, 0);
+    x->x_out2 = outlet_new(&x->x_obj, &s_float);
+    x->x_step = f;
+    floatinlet_new(&x->x_obj, &x->x_step);
+    return (x);
+}
+
+static void list_foreach_out(t_list_foreach *x, t_atom *a, int index)
+{
+    outlet_float(x->x_out2, index);
+    switch (a->a_type)
+    {
+    case A_FLOAT:
+        outlet_float(x->x_out1, a->a_w.w_float);
+        break;
+    case A_SYMBOL:
+        outlet_symbol(x->x_out1, a->a_w.w_symbol);
+        break;
+    case A_POINTER:
+        outlet_pointer(x->x_out1, a->a_w.w_gpointer);
+        break;
+    default:
+        outlet_bang(x->x_out1); /* shouldn't happen */
+        break;
+    }
+}
+
+static void list_foreach_list(t_list_foreach *x, t_symbol *s,
+    int argc, t_atom *argv)
+{
+        /* step can be negative but mustn't be zero! default: 1 */
+    int i, step = (int)x->x_step ? x->x_step : 1;
+        /* negative step values will iterate in reverse */
+    if (step > 0)
+        for (i = 0; i < argc; i += step)
+            list_foreach_out(x, &argv[i], i);
+    else
+        for (i = argc - 1; i >= 0; i += step)
+            list_foreach_out(x, &argv[i], i);
+}
+
+static void list_foreach_anything(t_list_foreach *x, t_symbol *s,
+    int argc, t_atom *argv)
+{
+    t_atom sel;
+        /* step can be negative but mustn't be zero! default: 1 */
+    int i, step = (int)x->x_step ? x->x_step : 1;
+    SETSYMBOL(&sel, s);
+        /* use some trickery to avoid unnecessary copy of the whole list */
+    if (step > 0) /* forward iteration */
+    {
+        list_foreach_out(x, &sel, 0); /* selector */
+        for (i = step - 1; i < argc; i += step) /* list */
+            list_foreach_out(x, &argv[i], i + 1); /* "real" index is off by 1 */
+    }
+    else /* backward iteration */
+    {
+        for (i = argc - 1; i >= 0; i += step) /* list */
+            list_foreach_out(x, &argv[i], i + 1); /* "real" index is off by 1 */
+            /* the selector might be skipped */
+        if ((step == -1) || (((argc + 1) % -step) == 1))
+            list_foreach_out(x, &sel, 0);
+    }
+}
+
+static void list_foreach_setup(void)
+{
+    list_foreach_class = class_new(gensym("list foreach"),
+        (t_newmethod)list_foreach_new, 0,
+        sizeof(t_list_foreach), 0, A_DEFFLOAT, 0);
+    class_addlist(list_foreach_class, list_foreach_list);
+    class_addanything(list_foreach_class, list_foreach_anything);
+    class_sethelpsymbol(list_foreach_class, &s_list);
+}
+
 /* ------------- list ------------------- */
 
 static void *list_new(t_pd *dummy, t_symbol *s, int argc, t_atom *argv)
@@ -783,6 +873,8 @@ static void *list_new(t_pd *dummy, t_symbol *s, int argc, t_atom *argv)
             pd_this->pd_newest = list_tosymbol_new();
         else if (s2 == gensym("store"))
             pd_this->pd_newest = list_store_new(s, argc-1, argv+1);
+        else if (s2 == gensym("foreach"))
+            pd_this->pd_newest = list_foreach_new(atom_getfloatarg(1, argc, argv));
         else
         {
             error("list %s: unknown function", s2->s_name);
@@ -803,5 +895,6 @@ void x_list_setup(void)
     list_length_setup();
     list_fromsymbol_setup();
     list_tosymbol_setup();
+    list_foreach_setup();
     class_addcreator((t_newmethod)list_new, &s_list, A_GIMME, 0);
 }
