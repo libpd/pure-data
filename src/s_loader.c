@@ -110,6 +110,7 @@ void sys_putonloadlist(const char *classname)
 }
 
 void class_set_extern_dir(t_symbol *s);
+void class_set_extern_sym(t_symbol *s);
 
 static int sys_do_load_abs(t_canvas *canvas, const char *objectname,
     const char *path);
@@ -202,6 +203,8 @@ static int sys_do_load_lib(t_canvas *canvas, const char *objectname,
 gotone:
     close(fd);
     class_set_extern_dir(gensym(dirbuf));
+        /* should this be the class name or object name? */
+    class_set_extern_sym(gensym(classname));
 
         /* rebuild the absolute pathname */
     strncpy(filename, dirbuf, MAXPDSTRING);
@@ -240,6 +243,7 @@ gotone:
                 *buf = '\0';
             error("%s: %s (%d)", filename, buf, err);
             class_set_extern_dir(&s_);
+            class_set_extern_sym(0);
             return (0);
         }
         makeout = (t_xxx)GetProcAddress(ntdll, symname);
@@ -253,6 +257,7 @@ gotone:
     {
         error("%s: %s", filename, dlerror());
         class_set_extern_dir(&s_);
+        class_set_extern_sym(0);
         return (0);
     }
     makeout = (t_xxx)dlsym(dlobj,  symname);
@@ -267,10 +272,12 @@ libdl or WIN32 required for loading externals!"
     {
         error("load_object: Symbol \"%s\" not found", symname);
         class_set_extern_dir(&s_);
+        class_set_extern_sym(0);
         return 0;
     }
     (*makeout)();
     class_set_extern_dir(&s_);
+    class_set_extern_sym(0);
     return (1);
 }
 
@@ -365,8 +372,7 @@ int sys_load_lib(t_canvas *canvas, const char *classname)
         sys_loadlib_iter(0, &data);
 
     if(data.ok)
-      sys_putonloadlist(classname);
-
+        sys_putonloadlist(classname);
 
     canvas_resume_dsp(dspstate);
     return data.ok;
