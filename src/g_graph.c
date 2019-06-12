@@ -469,7 +469,7 @@ static void graph_goprect(t_glist *x, t_symbol *s, int argc, t_atom *argv)
         glist_redraw(x);
     else
         /* glist_redraw() won't remove "ghost objects" */
-        canvas_redraw(x->gl_owner);
+        canvas_redraw(glist_getcanvas(x));
 }
 
 static void graph_xticks(t_glist *x,
