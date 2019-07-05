@@ -48,11 +48,13 @@ static void pd_qsort_r(void *base, size_t nmemb, size_t size,
                   int (*cmp)(const void *, const void *, void *),
                   void *arg)
 {
+    int (*old_cmp)(const void *, const void *, void *) = pd_qsort_r_cmp;
+    void *old_arg = pd_qsort_r_arg;
     pd_qsort_r_cmp = cmp;
     pd_qsort_r_arg = arg;
     qsort(base, nmemb, size, pd_qsort_r_wrap);
-    pd_qsort_r_arg = 0;
-    pd_qsort_r_cmp = 0;
+    pd_qsort_r_arg = old_arg;
+    pd_qsort_r_cmp = old_cmp;
 }
 
 #endif
