@@ -951,10 +951,12 @@ static t_class *trigger_class;
 #define TR_POINTER 3
 #define TR_LIST 4
 #define TR_ANYTHING 5
+#define TR_STATIC_FLOAT 6
 
 typedef struct triggerout
 {
     int u_type;         /* outlet type from above */
+    t_float u_float;    /* static value */
     t_outlet *u_outlet;
 } t_triggerout;
 
@@ -982,30 +984,34 @@ static void *trigger_new(t_symbol *s, int argc, t_atom *argv)
     x->x_vec = (t_triggerout *)getbytes(argc * sizeof(*x->x_vec));
     for (i = 0, ap = argv, u = x->x_vec; i < argc; u++, ap++, i++)
     {
-        t_atomtype thistype = ap->a_type;
-        char c;
-        if (thistype == TR_SYMBOL) c = ap->a_w.w_symbol->s_name[0];
-        else if (thistype == TR_FLOAT) c = 'f';
-        else c = 0;
-        if (c == 'p')
-            u->u_type = TR_POINTER,
+        if (ap->a_type == TR_SYMBOL){
+            char c = ap->a_w.w_symbol->s_name[0];
+            if (c == 'p')
+                u->u_type = TR_POINTER,
                 u->u_outlet = outlet_new(&x->x_obj, &s_pointer);
-        else if (c == 'f')
-            u->u_type = TR_FLOAT, u->u_outlet = outlet_new(&x->x_obj, &s_float);
-        else if (c == 'b')
-            u->u_type = TR_BANG, u->u_outlet = outlet_new(&x->x_obj, &s_bang);
-        else if (c == 'l')
-            u->u_type = TR_LIST, u->u_outlet = outlet_new(&x->x_obj, &s_list);
-        else if (c == 's')
-            u->u_type = TR_SYMBOL,
+            else if (c == 'f')
+                u->u_type = TR_FLOAT, u->u_outlet = outlet_new(&x->x_obj, &s_float);
+            else if (c == 'b')
+                u->u_type = TR_BANG, u->u_outlet = outlet_new(&x->x_obj, &s_bang);
+            else if (c == 'l')
+                u->u_type = TR_LIST, u->u_outlet = outlet_new(&x->x_obj, &s_list);
+            else if (c == 's')
+                u->u_type = TR_SYMBOL,
                 u->u_outlet = outlet_new(&x->x_obj, &s_symbol);
-        else if (c == 'a')
-            u->u_type = TR_ANYTHING,
-                u->u_outlet = outlet_new(&x->x_obj, &s_symbol);
+            else if (c == 'a')
+                u->u_type = TR_ANYTHING,
+                u->u_outlet = outlet_new(&x->x_obj, &s_anything);
+            else
+            {
+                pd_error(x, "trigger: %s: bad type", ap->a_w.w_symbol->s_name);
+                u->u_type = TR_FLOAT, u->u_outlet = outlet_new(&x->x_obj, &s_float);
+            }
+        }
         else
-        {
-            pd_error(x, "trigger: %s: bad type", ap->a_w.w_symbol->s_name);
-            u->u_type = TR_FLOAT, u->u_outlet = outlet_new(&x->x_obj, &s_float);
+        { // static float
+            u->u_float = ap->a_w.w_float;
+            u->u_type = TR_STATIC_FLOAT;
+            u->u_outlet = outlet_new(&x->x_obj, &s_float);
         }
     }
     return (x);
@@ -1023,19 +1029,20 @@ static void trigger_list(t_trigger *x, t_symbol *s, int argc, t_atom *argv)
             outlet_bang(u->u_outlet);
         else if (u->u_type == TR_SYMBOL)
             outlet_symbol(u->u_outlet,
-                (argc ? atom_getsymbol(argv) : &s_symbol));
+                (argc ? atom_getsymbol(argv) : s));
+        else if (u->u_type == TR_ANYTHING)
+            outlet_anything(u->u_outlet, s, argc, argv);
         else if (u->u_type == TR_POINTER)
-        {
-            if (!argc || argv->a_type != TR_POINTER)
-                pd_error(x, "unpack: bad pointer");
-            else outlet_pointer(u->u_outlet, argv->a_w.w_gpointer);
-        }
+            pd_error(x, "trigger: bad pointer");
+        else if (u->u_type == TR_STATIC_FLOAT)
+            outlet_float(u->u_outlet, u->u_float);
         else outlet_list(u->u_outlet, &s_list, argc, argv);
     }
 }
 
 static void trigger_anything(t_trigger *x, t_symbol *s, int argc, t_atom *argv)
 {
+    t_atom *av2 = NULL;
     t_triggerout *u;
     int i;
     for (i = (int)x->x_n, u = x->x_vec + i; u--, i--;)
@@ -1044,34 +1051,60 @@ static void trigger_anything(t_trigger *x, t_symbol *s, int argc, t_atom *argv)
             outlet_bang(u->u_outlet);
         else if (u->u_type == TR_ANYTHING)
             outlet_anything(u->u_outlet, s, argc, argv);
-        else pd_error(x, "trigger: can only convert 's' to 'b' or 'a'");
+        else if (u->u_type == TR_FLOAT)
+            outlet_float(u->u_outlet, 0);
+        else if (u->u_type == TR_STATIC_FLOAT)
+            outlet_float(u->u_outlet, u->u_float);
+        else if (u->u_type == TR_SYMBOL)
+            outlet_symbol(u->u_outlet, s);
+        else if (u->u_type == TR_POINTER)
+            pd_error(x, "trigger: bad pointer");
+        else // list
+        {
+            av2 = (t_atom *)getbytes((argc + 1) * sizeof(t_atom));
+            SETSYMBOL(av2, s);
+            for (int j = 0; j < argc; j++)
+                av2[j + 1] = argv[j];
+            SETSYMBOL(av2, s);
+            outlet_list(u->u_outlet, &s_list, argc+1, av2);
+            freebytes(av2, (argc + 1) * sizeof(t_atom));
+        }
+    }
+}
+
+static void trigger_pointer(t_trigger *x, t_gpointer *gp)
+{
+    t_triggerout *u;
+    int i;
+    for (i = (int)x->x_n, u = x->x_vec + i; u--, i--;)
+    {
+        if (u->u_type == TR_BANG)
+            outlet_bang(u->u_outlet);
+        else if (u->u_type == TR_POINTER || u->u_type == TR_ANYTHING)
+            outlet_pointer(u->u_outlet, gp);
+        else if (u->u_type == TR_STATIC_FLOAT)
+            outlet_float(u->u_outlet, u->u_float);
+        else pd_error(x, "trigger: can only convert 'pointer' to 'bang'");
     }
 }
 
 static void trigger_bang(t_trigger *x)
 {
-    trigger_list(x, 0, 0, 0);
-}
-
-static void trigger_pointer(t_trigger *x, t_gpointer *gp)
-{
-    t_atom at;
-    SETPOINTER(&at, gp);
-    trigger_list(x, 0, 1, &at);
+    trigger_list(x, &s_bang, 0, 0);
 }
 
 static void trigger_float(t_trigger *x, t_float f)
 {
     t_atom at;
     SETFLOAT(&at, f);
-    trigger_list(x, 0, 1, &at);
+    trigger_list(x, &s_float, 1, &at);
 }
 
 static void trigger_symbol(t_trigger *x, t_symbol *s)
 {
     t_atom at;
     SETSYMBOL(&at, s);
-    trigger_list(x, 0, 1, &at);
+    trigger_list(x, &s_symbol, 1, &at);
 }
 
 static void trigger_free(t_trigger *x)

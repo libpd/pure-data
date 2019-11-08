@@ -1,37 +1,112 @@
-#N canvas 58 142 685 355 12;
-#X msg 28 149 2.5;
-#X msg 126 151 bang;
-#X msg 68 150 23 64;
-#X obj 28 242 print x1;
-#X obj 112 242 print x2;
-#X obj 196 240 print x3;
-#X obj 43 26 trigger;
-#X obj 286 241 print x4;
-#X text 114 27 - sequence messages in right-to-left order;
-#X text 417 331 updated for Pd version 0.33;
-#X text 81 290 the above can be abbreviated as:;
-#X msg 172 152 symbol dog;
-#X text 39 59 The trigger object outputs its input from right to left
-\, converting to the types indicated by its creation arguments. There
-is also a "pointer" argument type (see the pointer object.);
-#X obj 381 293 t f b s l a;
-#X msg 466 167 dog my cats;
-#X obj 466 199 trigger bang anything;
-#X obj 374 242 print x5;
-#X obj 466 240 print y1;
-#X obj 552 242 print y2;
-#X obj 28 202 trigger float bang symbol list anything;
-#X text 464 122 "anythings" can only;
-#X text 461 142 be converted to bang:;
-#X connect 0 0 19 0;
-#X connect 1 0 19 0;
-#X connect 2 0 19 0;
-#X connect 11 0 19 0;
-#X connect 14 0 15 0;
-#X connect 15 0 17 0;
-#X connect 15 1 18 0;
-#X connect 19 0 3 0;
-#X connect 19 1 4 0;
-#X connect 19 2 5 0;
-#X connect 19 3 7 0;
-#X connect 19 4 16 0;
+#N canvas 272 95 1063 741 12;
+#X msg 50 150 2.5;
+#X msg 88 150 bang;
+#X text 110 30 - sequence messages in right-to-left order;
+#X text 52 300 the above can be abbreviated as:;
+#X msg 134 150 symbol dog;
+#X msg 273 150 list a b c;
+#X floatatom 829 174 5 0 0 0 - - -;
+#X floatatom 779 173 5 0 0 0 - - -;
+#X floatatom 779 120 5 0 0 0 - - -;
+#X floatatom 619 149 5 0 0 0 - - -;
+#X floatatom 677 150 5 0 0 0 - - -;
+#X msg 360 150 dog my cats;
+#X obj 879 177 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 619 181 /;
+#X floatatom 619 212 5 0 0 0 - - -;
+#X floatatom 619 96 5 0 0 0 - - -;
+#X floatatom 930 174 5 0 0 0 - - -;
+#X obj 231 608 t b f;
+#X msg 231 639 1;
+#X obj 246 670 /;
+#X floatatom 246 698 5 0 0 0 - - -;
+#X floatatom 231 579 5 0 0 0 - - -;
+#X obj 228 422 trigger pointer;
+#X obj 362 422 t p;
+#X obj 228 457 pointer;
+#X text 40 377 The trigger object can also handle pointers \, abbreviated
+as "p". This is used for data structures (see the pointer object for
+reference).;
+#X text 156 456 see also:;
+#X text 343 421 =;
+#X text 34 497 Trigger is normally used to send a message type in a
+sequence to different locations. Since all message types can be sucessfully
+converted to a bang \, it's quite common to have both a bang and another
+message type as creation arguments., f 64;
+#X msg 218 150 1 2 3;
+#X obj 269 243 print s;
+#X obj 336 243 print l;
+#X obj 404 243 print a;
+#X obj 201 242 print f;
+#X obj 134 243 print b;
+#X obj 779 147 trigger float 2 bang 1;
+#X obj 619 122 t 1 f;
+#X obj 134 202 trigger bang float symbol list anything;
+#X obj 285 300 t f b s l a;
+#X text 544 29 You can also use floats as creation arguments \, these
+are then treated as constant values \, which can be more convenient
+to sequence messages. As constant messages \, these are not converted!
+, f 65;
+#X obj 39 29 trigger;
+#X obj 346 340 t;
+#X obj 407 340 t b b;
+#X text 384 339 =;
+#X text 41 340 The default arguments are "bang bang" \, so:;
+#X text 808 684 updated for Pd version 0.50.;
+#X text 528 302 The creation arguments: bang \, float \, symbol \,
+list and pointer reflect special message types (or 'selectors'). The
+'anything' type is just any type - either these special types or even
+others (such as "dog my cats" \, which has the 'dogs' selector). When
+converting message types \, this is what happens., f 62;
+#X text 550 392 - bang: any input message can be converted to a bang.
+, f 64;
+#X text 550 412 - float: a list that starts with a float lets it through
+\, other message types convert to "0"., f 64;
+#X text 550 446 - symbol: a list that starts with a symbol lets it
+through. An anything message like "dog my cats" will convert the selector
+to a symbol. A float message or a list that starts with a float become
+"symbol float" \, and bang becomes "symbol bang"., f 64;
+#X text 550 634 - anything: whatever comes in \, comes out \, there's
+no conversion., f 64;
+#X text 550 598 - pointer: no other messages can be converted to a
+pointer \, and a pointer should only be converted to a bang., f 64
+;
+#X text 528 273 About message types and conversions:;
+#X text 550 508 - list: any message that is not a list will get a list
+selector \, in the case "dog my cats" \, the list selector is added.
+Note that a bang comes as a zero element list message \, which gets
+automatically converted to a bang. A one element float list also becomes
+a float and a one element symbol list becomes a symbol message as well.
+, f 64;
+#X text 35 62 The trigger object outputs its input from right to left.
+The type of message is indicated by its creation arguments and different
+ones are allowed (in this case the the object converts between different
+message types \, see below).;
+#X connect 0 0 37 0;
+#X connect 1 0 37 0;
+#X connect 4 0 37 0;
+#X connect 5 0 37 0;
+#X connect 8 0 35 0;
+#X connect 9 0 13 0;
+#X connect 10 0 13 1;
+#X connect 11 0 37 0;
+#X connect 13 0 14 0;
+#X connect 15 0 36 0;
+#X connect 17 0 18 0;
+#X connect 17 1 19 1;
+#X connect 18 0 19 0;
+#X connect 19 0 20 0;
+#X connect 21 0 17 0;
+#X connect 29 0 37 0;
+#X connect 35 0 7 0;
+#X connect 35 1 6 0;
+#X connect 35 2 12 0;
+#X connect 35 3 16 0;
+#X connect 36 0 9 0;
+#X connect 36 1 10 0;
+#X connect 37 0 34 0;
+#X connect 37 1 33 0;
+#X connect 37 2 30 0;
+#X connect 37 3 31 0;
+#X connect 37 4 32 0;
