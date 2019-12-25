@@ -325,6 +325,7 @@ void obj_init(void)
 /* --------------------------- outlets ------------------------------ */
 
 static PERTHREAD int stackcount = 0; /* iteration counter */
+static PERTHREAD int overflow = 0;
 #define STACKITER 1000 /* maximum iterations allowed */
 
 static PERTHREAD int outlet_eventno;
@@ -332,6 +333,21 @@ static PERTHREAD int outlet_eventno;
     /* set a stack limit (on each incoming event that can set off messages)
     for the outlet functions to check to prevent stack overflow from message
     recursion */
+
+int stackcount_add(void)
+{
+        /* set overflow flag to prevent any further messaging */
+    if (++stackcount >= STACKITER)
+        overflow = 1;
+    return !overflow;
+}
+
+void stackcount_release(void)
+{
+        /* once the stack is completely unwound, we can clear the overflow flag */
+    if (--stackcount == 0)
+        overflow = 0;
+}
 
 void outlet_setstacklim(void)
 {
@@ -382,19 +398,19 @@ static void outlet_stackerror(t_outlet *x)
 void outlet_bang(t_outlet *x)
 {
     t_outconnect *oc;
-    if(++stackcount >= STACKITER)
+    if(!stackcount_add())
         outlet_stackerror(x);
     else
     for (oc = x->o_connections; oc; oc = oc->oc_next)
         pd_bang(oc->oc_to);
-    --stackcount;
+    stackcount_release();
 }
 
 void outlet_pointer(t_outlet *x, t_gpointer *gp)
 {
     t_outconnect *oc;
     t_gpointer gpointer;
-    if(++stackcount >= STACKITER)
+    if(!stackcount_add())
         outlet_stackerror(x);
     else
     {
@@ -402,51 +418,51 @@ void outlet_pointer(t_outlet *x, t_gpointer *gp)
         for (oc = x->o_connections; oc; oc = oc->oc_next)
             pd_pointer(oc->oc_to, &gpointer);
     }
-    --stackcount;
+    stackcount_release();
 }
 
 void outlet_float(t_outlet *x, t_float f)
 {
     t_outconnect *oc;
-    if(++stackcount >= STACKITER)
+    if(!stackcount_add())
         outlet_stackerror(x);
     else
     for (oc = x->o_connections; oc; oc = oc->oc_next)
         pd_float(oc->oc_to, f);
-    --stackcount;
+    stackcount_release();
 }
 
 void outlet_symbol(t_outlet *x, t_symbol *s)
 {
     t_outconnect *oc;
-    if(++stackcount >= STACKITER)
+    if(!stackcount_add())
         outlet_stackerror(x);
     else
     for (oc = x->o_connections; oc; oc = oc->oc_next)
         pd_symbol(oc->oc_to, s);
-    --stackcount;
+    stackcount_release();
 }
 
 void outlet_list(t_outlet *x, t_symbol *s, int argc, t_atom *argv)
 {
     t_outconnect *oc;
-    if(++stackcount >= STACKITER)
+    if(!stackcount_add())
         outlet_stackerror(x);
     else
     for (oc = x->o_connections; oc; oc = oc->oc_next)
         pd_list(oc->oc_to, s, argc, argv);
-    --stackcount;
+    stackcount_release();
 }
 
 void outlet_anything(t_outlet *x, t_symbol *s, int argc, t_atom *argv)
 {
     t_outconnect *oc;
-    if(++stackcount >= STACKITER)
+    if(!stackcount_add())
         outlet_stackerror(x);
     else
     for (oc = x->o_connections; oc; oc = oc->oc_next)
         typedmess(oc->oc_to, s, argc, argv);
-    --stackcount;
+    stackcount_release();
 }
 
     /* get the outlet's declared symbol */
