@@ -780,9 +780,10 @@ static void *list_foreach_new(t_floatarg f)
     return (x);
 }
 
-static void list_foreach_out(t_list_foreach *x, t_atom *a, int index)
+static void list_foreach_out(t_list_foreach *x, t_atom *a, int n, int index)
 {
     outlet_float(x->x_out2, index);
+    outlet_list(x->x_out1, &s_list, n, a);
     switch (a->a_type)
     {
     case A_FLOAT:
@@ -800,42 +801,88 @@ static void list_foreach_out(t_list_foreach *x, t_atom *a, int index)
     }
 }
 
+static void list_foreach_do(t_list_foreach *x,
+    int argc, t_atom *argv, int step, int onset)
+{
+    int i;
+    if (step > 0) /* forward iteration */
+    {
+        if (step == 1)
+            for (i = 0; i < argc; i++)
+            {
+                outlet_float(x->x_out2, i + onset);
+                outlet_list(x->x_out1, &s_list, 1, &argv[i]);
+            }
+        else
+            for (i = 0; i < argc; i += step)
+            {
+                int n = (i + step) > argc ? argc - i : step;
+                outlet_float(x->x_out2, i + onset);
+                outlet_list(x->x_out1, &s_list, n, &argv[i]);
+            }
+    }
+    else /* backward iteration */
+    {
+        if (step == -1)
+            for (i = argc - 1; i >= 0; i--)
+            {
+                outlet_float(x->x_out2, i + onset);
+                outlet_list(x->x_out1, &s_list, 1, &argv[i]);
+            }
+        else
+            for (i = argc; i > 0; i += step)
+            {
+                int n, index = i + step;
+                if (index < 0)
+                    index = 0, n = i;
+                else
+                    n = -step;
+                outlet_float(x->x_out2, index + onset);
+                outlet_list(x->x_out1, &s_list, n, &argv[index]);
+            }
+    }
+}
+
 static void list_foreach_list(t_list_foreach *x, t_symbol *s,
     int argc, t_atom *argv)
 {
         /* step can be negative but mustn't be zero! default: 1 */
-    int i, step = (int)x->x_step ? x->x_step : 1;
-        /* negative step values will iterate in reverse */
-    if (step > 0)
-        for (i = 0; i < argc; i += step)
-            list_foreach_out(x, &argv[i], i);
-    else
-        for (i = argc - 1; i >= 0; i += step)
-            list_foreach_out(x, &argv[i], i);
+    int step = (int)x->x_step ? (int)x->x_step : 1;
+    list_foreach_do(x, argc, argv, step, 0);
 }
 
 static void list_foreach_anything(t_list_foreach *x, t_symbol *s,
     int argc, t_atom *argv)
 {
-    t_atom sel;
         /* step can be negative but mustn't be zero! default: 1 */
-    int i, step = (int)x->x_step ? x->x_step : 1;
-    SETSYMBOL(&sel, s);
+    int step = (int)x->x_step ? x->x_step : 1;
         /* use some trickery to avoid unnecessary copy of the whole list */
-    if (step > 0) /* forward iteration */
+    t_atom *buf;
+    int n = abs(step);
+    if (n > argc + 1)
+        n = argc + 1;
+    if (step < 0)
     {
-        list_foreach_out(x, &sel, 0); /* selector */
-        for (i = step - 1; i < argc; i += step) /* list */
-            list_foreach_out(x, &argv[i], i + 1); /* "real" index is off by 1 */
+            /* when iterating backwards, the buffer must contain
+            the "remaining" elements - but only if there are any! */
+        int rem = (argc + 1) % -step;
+        if (rem && n > rem)
+            n = rem;
     }
-    else /* backward iteration */
+    ATOMS_ALLOCA(buf, n);
+    SETSYMBOL(buf, s);
+    atoms_copy(n - 1, argv, buf + 1);
+    if (step > 0)
     {
-        for (i = argc - 1; i >= 0; i += step) /* list */
-            list_foreach_out(x, &argv[i], i + 1); /* "real" index is off by 1 */
-            /* the selector might be skipped */
-        if ((step == -1) || (((argc + 1) % -step) == 1))
-            list_foreach_out(x, &sel, 0);
+        list_foreach_do(x, n, buf, step, 0);
+        list_foreach_do(x, argc - (n - 1), argv + (n - 1), step, n);
     }
+    else
+    {
+        list_foreach_do(x, argc - (n - 1), argv + (n - 1), step, n);
+        list_foreach_do(x, n, buf, step, 0);
+    }
+    ATOMS_FREEA(buf, n);
 }
 
 static void list_foreach_setup(void)
