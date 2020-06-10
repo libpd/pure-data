@@ -61,7 +61,15 @@ t_symbol *sys_flags;    /* more command-line flags */
 
 char *sys_guicmd;
 t_symbol *sys_libdir;
-static t_namelist *sys_openlist;
+
+typedef struct _patchlist
+{
+    struct _patchlist *pl_next;
+    char *pl_file;
+    char *pl_args;
+} t_patchlist;
+
+static t_patchlist *sys_openlist;
 static t_namelist *sys_messagelist;
 static int sys_version;
 int sys_oldtclversion;      /* hack to warn g_rtext.c about old text sel */
@@ -201,7 +209,39 @@ int sys_fontheight(int fontsize)
 int sys_defaultfont;
 #define DEFAULTFONT 12
 
-static void openit(const char *dirname, const char *filename)
+static t_patchlist * patchlist_append(t_patchlist *listwas,
+                                      const char *file, const char *args)
+{
+    t_patchlist *pl, *pl2;
+    pl2 = (t_patchlist *)(getbytes(sizeof(*pl)));
+    pl2->pl_next = 0;
+    pl2->pl_file = (char *)getbytes(strlen(file) + 1);
+    strcpy(pl2->pl_file, file);
+    pl2->pl_args = (char *)getbytes(strlen(args) + 1);
+    strcpy(pl2->pl_args, args);
+    if (!listwas)
+        return (pl2);
+    else
+    {
+        for (pl = listwas; pl->pl_next; pl = pl->pl_next) ;
+        pl->pl_next = pl2;
+    }
+    return (listwas);
+}
+
+static void patchlist_free(t_patchlist *listwas)
+{
+    t_patchlist *pl, *pl2;
+    for (pl = listwas; pl; pl = pl2)
+    {
+        pl2 = pl->pl_next;
+        t_freebytes(pl->pl_file, strlen(pl->pl_file) + 1);
+        t_freebytes(pl->pl_args, strlen(pl->pl_args) + 1);
+        t_freebytes(pl, sizeof(*pl));
+    }
+}
+
+static void openit(const char *dirname, const char *filename, const char *args)
 {
     char dirbuf[MAXPDSTRING], *nameptr;
     int fd = open_via_path(dirname, filename, "", dirbuf, &nameptr,
@@ -209,6 +249,15 @@ static void openit(const char *dirname, const char *filename)
     if (fd >= 0)
     {
         close (fd);
+        if (args && *args)
+        {
+            t_binbuf *b1 = binbuf_new(), *b2 = binbuf_new();
+            binbuf_text(b1, args, strlen(args));
+            binbuf_addbinbuf(b2, b1); // bash semis, commas and dollars
+            canvas_setargs(binbuf_getnatom(b2), binbuf_getvec(b2));
+            binbuf_free(b1);
+            binbuf_free(b2);
+        }
         glob_evalfile(0, gensym(nameptr), gensym(dirbuf));
     }
     else
@@ -226,6 +275,7 @@ open(), read(), etc, calls to be served somehow from the GUI too. */
 void glob_initfromgui(void *dummy, t_symbol *s, int argc, t_atom *argv)
 {
     const char *cwd = atom_getsymbolarg(0, argc, argv)->s_name;
+    t_patchlist *pl;
     t_namelist *nl;
     unsigned int i;
     int did_fontwarning = 0;
@@ -268,9 +318,9 @@ void glob_initfromgui(void *dummy, t_symbol *s, int argc, t_atom *argv)
         sys_oktoloadfiles(1);
     }
         /* open patches specifies with "-open" args */
-    for  (nl = sys_openlist; nl; nl = nl->nl_next)
-        openit(cwd, nl->nl_string);
-    namelist_free(sys_openlist);
+    for  (pl = sys_openlist; pl; pl = pl->pl_next)
+        openit(cwd, pl->pl_file, pl->pl_args);
+    patchlist_free(sys_openlist);
     sys_openlist = 0;
         /* send messages specified with "-send" args */
     for  (nl = sys_messagelist; nl; nl = nl->nl_next)
@@ -492,6 +542,7 @@ static char *(usagemessage[]) = {
 "-stdpath         -- search standard directory (true by default)\n",
 "-helppath <path> -- add to help file search path\n",
 "-open <file>     -- open file(s) on startup\n",
+"-open-with <file> <args> -- open file(s) on startup with arguments\n",
 "-lib <file>      -- load object library(s) (omit file extensions)\n",
 "-font-size <n>      -- specify default font size in points\n",
 "-font-face <name>   -- specify default font\n",
@@ -1033,11 +1084,31 @@ int sys_argparse(int argc, char **argv)
         }
         else if (!strcmp(*argv, "-open"))
         {
+            t_namelist *nl, *nl2;
             if (argc < 2)
                 goto usage;
 
-            sys_openlist = namelist_append_files(sys_openlist, argv[1]);
+            nl = namelist_append_files(0, argv[1]);
+            for (nl2 = nl; nl2; nl2 = nl2->nl_next)
+            {
+                sys_openlist = patchlist_append(sys_openlist, nl2->nl_string, "");
+            }
+            namelist_free(nl);
             argc -= 2; argv += 2;
+        }
+        else if (!strcmp(*argv, "-open-with"))
+        {
+            t_namelist *nl, *nl2;
+            if (argc < 3)
+                goto usage;
+
+            nl = namelist_append_files(0, argv[1]);
+            for (nl2 = nl; nl2; nl2 = nl2->nl_next)
+            {
+                sys_openlist = patchlist_append(sys_openlist, nl2->nl_string, argv[2]);
+            }
+            namelist_free(nl);
+            argc -= 3; argv += 3;
         }
         else if (!strcmp(*argv, "-lib"))
         {
@@ -1369,8 +1440,15 @@ int sys_argparse(int argc, char **argv)
     if (!sys_defaultfont)
         sys_defaultfont = DEFAULTFONT;
     for (; argc > 0; argc--, argv++)
-        sys_openlist = namelist_append_files(sys_openlist, *argv);
-
+    {
+        t_namelist *nl, *nl2;
+        nl = namelist_append_files(0, *argv);
+        for (nl2 = nl; nl2; nl2 = nl2->nl_next)
+        {
+            sys_openlist = patchlist_append(sys_openlist, nl2->nl_string, "");
+        }
+        namelist_free(nl);
+    }
 
     return (0);
 }
