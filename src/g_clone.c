@@ -54,6 +54,7 @@ typedef struct _out
 typedef struct _clone
 {
     t_object x_obj;
+    t_canvas *x_gl;
     int x_n;            /* number of copies */
     t_copy *x_vec;      /* the copies */
     int x_nin;
@@ -151,6 +152,15 @@ static void clone_in_fwd(t_in *x, t_symbol *s, int argc, t_atom *argv)
 {
     if (argc > 0 && argv->a_type == A_SYMBOL)
         typedmess(&x->i_pd, argv->a_w.w_symbol, argc-1, argv+1);
+}
+
+static void clone_setn(t_clone *, t_floatarg);
+
+static void clone_in_resize(t_in *x, t_floatarg f)
+{
+    canvas_setcurrent(x->i_owner->x_gl);
+    clone_setn(x->i_owner, f);
+    canvas_unsetcurrent(x->i_owner->x_gl);
 }
 
 static void clone_out_anything(t_outproxy *x, t_symbol *s, int argc, t_atom *argv)
@@ -354,6 +364,7 @@ static void *clone_new(t_symbol *s, int argc, t_atom *argv)
     t_clone *x = (t_clone *)pd_new(clone_class);
     t_canvas *c;
     int wantn, dspstate, i, voicetovis = clone_voicetovis;
+    x->x_gl = canvas_getcurrent();
     x->x_invec = 0;
     x->x_outvec = 0;
     x->x_argv = 0;
@@ -487,6 +498,8 @@ void clone_setup(void)
         A_FLOAT, A_FLOAT, 0);
     class_addmethod(clone_in_class, (t_method)clone_in_fwd, gensym("fwd"),
         A_GIMME, 0);
+    class_addmethod(clone_in_class, (t_method)clone_in_resize, gensym("resize"),
+        A_FLOAT, 0);
     class_addlist(clone_in_class, (t_method)clone_in_list);
 
     clone_out_class = class_new(gensym("clone-outlet"), 0, 0,
