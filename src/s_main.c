@@ -542,7 +542,7 @@ static char *(usagemessage[]) = {
 "-stdpath         -- search standard directory (true by default)\n",
 "-helppath <path> -- add to help file search path\n",
 "-open <file>     -- open file(s) on startup\n",
-"-open-with <file> <args> -- open file(s) on startup with arguments\n",
+"-open-with-args <file> <args> -- open file(s) on startup with arguments\n",
 "-lib <file>      -- load object library(s) (omit file extensions)\n",
 "-font-size <n>      -- specify default font size in points\n",
 "-font-face <name>   -- specify default font\n",
@@ -1096,7 +1096,7 @@ int sys_argparse(int argc, char **argv)
             namelist_free(nl);
             argc -= 2; argv += 2;
         }
-        else if (!strcmp(*argv, "-open-with"))
+        else if (!strcmp(*argv, "-open-with-args"))
         {
             t_namelist *nl, *nl2;
             if (argc < 3)
