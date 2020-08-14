@@ -41,19 +41,20 @@
 
 #define IEM_GUI_MAX_COLOR            30
 
-#define IEM_GUI_DEFAULTSIZE 15
+#define IEM_GUI_DEFAULTSIZE 18
 #define IEM_GUI_MINSIZE     8
 #define IEM_GUI_MAXSIZE     1000
 #define IEM_SL_DEFAULTSIZE  128
 #define IEM_SL_MINSIZE      2
 #define IEM_FONT_MINSIZE    4
+#define IEM_DEFFONT_SIZE    12
 
 #define IEM_BNG_DEFAULTHOLDFLASHTIME  250
 #define IEM_BNG_DEFAULTBREAKFLASHTIME 50
 #define IEM_BNG_MINHOLDFLASHTIME      50
 #define IEM_BNG_MINBREAKFLASHTIME     10
 
-#define IEM_VU_DEFAULTSIZE 3
+#define IEM_VU_DEFAULTSIZE 4
 #define IEM_VU_LARGESMALL  2
 #define IEM_VU_MINSIZE     2
 #define IEM_VU_MAXSIZE     25
@@ -81,7 +82,7 @@
 #define IEM_GUI_DRAW_MODE_CONFIG 5
 #define IEM_GUI_DRAW_MODE_IO     6
 
-#define IEM_GUI_IOHEIGHT 2
+#define IEM_GUI_IOHEIGHT 3
 
 #define IS_A_POINTER(atom,index) ((atom+index)->a_type == A_POINTER)
 #define IS_A_FLOAT(atom,index) ((atom+index)->a_type == A_FLOAT)
