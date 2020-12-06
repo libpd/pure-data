@@ -933,6 +933,19 @@ t_pd *pd_newest(void)
 
     /* horribly, we need prototypes for each of the artificial function
     calls in typedmess(), to keep the compiler quiet. */
+    /* Even more horribly, function pointers must be called at their
+    exact type in Emscripten, including return type, which makes the
+    number of cases explode (7 * 6 * 2 = 84). This is not checked at
+    compile time, but wrong usage crashes at runtime. The naming pattern
+    is t_funMN for M t_int args and N t_floatarg args returning t_pd *,
+    with t_vfunMN for the void-returning variants. The versions with a
+    t_pd * are for pd_objectmaker, which returns the new object from the
+    method, c.f. pd_newest support. For the same reason, bang_new() and
+    similar can't be private in Emscripten, because their return type is
+    different (as pd_objectmaker methods) vs regular bang methods, so
+    they need special treatment in the dispatcher: the dispatcher checks
+    explicitly for pd_objectmaker and calls the method at the correct
+    type. */
 typedef t_pd *(*t_newgimme)(t_symbol *s, int argc, t_atom *argv);
 typedef void(*t_messgimme)(t_pd *x, t_symbol *s, int argc, t_atom *argv);
 typedef void*(*t_messgimmer)(t_pd *x, t_symbol *s, int argc, t_atom *argv);
