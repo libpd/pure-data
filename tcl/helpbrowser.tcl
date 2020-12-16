@@ -7,7 +7,6 @@ namespace eval ::helpbrowser:: {
     variable reference_count
     variable reference_paths
     variable doctypes "*.{pd,pat,mxb,mxt,help,txt,htm,html,pdf,c}"
-    variable maxcols
 
     namespace export open_helpbrowser
     namespace export refresh
@@ -29,9 +28,6 @@ proc ::helpbrowser::open_helpbrowser {} {
         if {$::windowingsystem eq "aqua"} {
             .helpbrowser configure -menu $::dialog_menubar
         }
-
-        # set the maximum number of child columns to create
-        set ::helpbrowser::maxcols 5
 
         # TODO wrap frame in a canvas with a horz scrollbar,
         # currently we simply add cols to the left until we reach max cols
@@ -319,11 +315,9 @@ proc ::helpbrowser::dir_left {count window} {
 # navigate from one column to the right or update the second columns content
 # set move to false if the cursor should stay in the current column
 proc ::helpbrowser::dir_navigate_key {dir count window {move true}} {
-    variable maxcols
     if {[set newdir [$window get active]] eq {}} {
         return
     }
-    if {$count > $maxcols} {return}
     set dir_to_open [file join $dir $newdir]
     if {[file isdirectory $dir_to_open]} {
         set lbox [make_doclistbox $dir_to_open $count $move]
@@ -333,27 +327,19 @@ proc ::helpbrowser::dir_navigate_key {dir count window {move true}} {
 
 # open current file, open directories too if we're on the last col
 proc ::helpbrowser::dir_return {dir count window} {
-    variable maxcols
     if {[set newdir [$window get active]] eq {}} {
         return
     }
     set dir_to_open [file join $dir $newdir]
-    if {$count <= $maxcols} {
-        if {[file isfile $dir_to_open]} {
-            open_path $dir $newdir
-        }
-    } else {
-        open_path $dir $newdir
-    }
+	if {[file isfile $dir_to_open]} {
+		open_path $dir $newdir
 }
 
 # navigate into an actual directory
 proc ::helpbrowser::dir_navigate {dir count window x y} {
-    variable maxcols
     if {[set newdir [$window get [$window index "@$x,$y"]]] eq {}} {
         return
     }
-    if {$count > $maxcols} {return}
     set dir_to_open [file join $dir $newdir]
     if {[file isdirectory $dir_to_open]} {
         make_doclistbox $dir_to_open $count false
