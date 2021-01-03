@@ -730,14 +730,18 @@ static void gatom_key(void *z, t_floatarg f)
     }
     else if (c == '\n')
     {
-        if (x->a_atom.a_type == A_FLOAT)
-            x->a_atom.a_w.w_float = atof(x->a_buf);
-        else if (x->a_atom.a_type == A_SYMBOL)
-            x->a_atom.a_w.w_symbol = gensym(x->a_buf);
-        else bug("gatom_key");
+        if(x->a_buf[0]){
+            if (x->a_atom.a_type == A_FLOAT)
+                x->a_atom.a_w.w_float = atof(x->a_buf);
+            else if (x->a_atom.a_type == A_SYMBOL)
+                x->a_atom.a_w.w_symbol = gensym(x->a_buf);
+            else bug("gatom_key");
+            gatom_retext(x, 1);
+            x->a_buf[0] = 0;
+        }
+        else
+            gatom_retext(x, 1);
         gatom_bang(x);
-        gatom_retext(x, 1);
-        x->a_buf[0] = 0;
     }
     else if (len < (ATOMBUFSIZE-1))
     {
@@ -1235,8 +1239,7 @@ void text_save(t_gobj *z, t_binbuf *b)
     else if (x->te_type == T_ATOM)
     {
         t_atomtype t = ((t_gatom *)x)->a_atom.a_type;
-        t_symbol *sel = (t == A_SYMBOL ? gensym("symbolatom") :
-            (t == A_FLOAT ? gensym("floatatom") : gensym("intatom")));
+        t_symbol *sel = (t == A_SYMBOL ? gensym("symbolatom") : gensym("floatatom"));
         t_symbol *label = gatom_escapit(((t_gatom *)x)->a_label);
         t_symbol *symfrom = gatom_escapit(((t_gatom *)x)->a_symfrom);
         t_symbol *symto = gatom_escapit(((t_gatom *)x)->a_symto);
