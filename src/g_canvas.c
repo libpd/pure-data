@@ -1692,7 +1692,10 @@ void canvas_declare(t_canvas *x, t_symbol *s, int argc, t_atom *argv)
             canvas_stdlib(e, atom_getsymbolarg(i+1, argc, argv)->s_name);
             i++;
         }
-        else post("declare: %s: unknown declaration", flag);
+        else {
+            canvas_path(x, e, flag);
+            canvas_lib(x, e, flag);
+        }
     }
 }
 
