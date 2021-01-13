@@ -196,9 +196,10 @@ void sys_setalarm(int microsec);
 #define API_PORTAUDIO 4
 #define API_JACK 5
 #define API_SGI 6           /* gone */
-#define API_AUDIOUNIT 7
-#define API_ESD 8           /* no idea what this was, probably gone now */
+#define API_AUDIOUNIT 7     /* gone */
+#define API_ESD 8           /* gone */
 #define API_DUMMY 9
+#define API_PULSEAUDIO 10
 
     /* figure out which API should be the default.  The one we judge most
     likely to offer a working device takes precedence so that if you
@@ -209,18 +210,15 @@ void sys_setalarm(int microsec);
 #if defined(USEAPI_MMIO)
 # define API_DEFAULT API_MMIO
 # define API_DEFSTRING "MMIO"
+#elif defined(USEAPI_PULSEAUDIO)
+# define API_DEFAULT API_PULSEAUDIO
+# define API_DEFSTRING "PulseAudio"
 #elif defined(USEAPI_ALSA)
 # define API_DEFAULT API_ALSA
 # define API_DEFSTRING "ALSA"
 #elif defined(USEAPI_OSS)
 # define API_DEFAULT API_OSS
 # define API_DEFSTRING "OSS"
-#elif defined(USEAPI_AUDIOUNIT)
-# define API_DEFAULT API_AUDIOUNIT
-# define API_DEFSTRING "AudioUnit"
-#elif defined(USEAPI_ESD)
-# define API_DEFAULT API_ESD
-# define API_DEFSTRING "ESD (?)"
 #elif defined(USEAPI_PORTAUDIO)
 # define API_DEFAULT API_PORTAUDIO
 # define API_DEFSTRING "portaudio"
@@ -270,7 +268,6 @@ int oss_open_audio(int naudioindev, int *audioindev, int nchindev,
     int *choutdev, int rate, int blocksize);
 void oss_close_audio(void);
 int oss_send_dacs(void);
-void oss_reportidle(void);
 void oss_getdevs(char *indevlist, int *nindevs,
     char *outdevlist, int *noutdevs, int *canmulti,
         int maxndev, int devdescsize);
@@ -280,7 +277,6 @@ int alsa_open_audio(int naudioindev, int *audioindev, int nchindev,
     int *choutdev, int rate, int blocksize);
 void alsa_close_audio(void);
 int alsa_send_dacs(void);
-void alsa_reportidle(void);
 void alsa_getdevs(char *indevlist, int *nindevs,
     char *outdevlist, int *noutdevs, int *canmulti,
         int maxndev, int devdescsize);
@@ -289,7 +285,6 @@ int jack_open_audio(int wantinchans, int wantoutchans, int srate,
     t_audiocallback callback);
 void jack_close_audio(void);
 int jack_send_dacs(void);
-void jack_reportidle(void);
 void jack_getdevs(char *indevlist, int *nindevs,
     char *outdevlist, int *noutdevs, int *canmulti,
         int maxndev, int devdescsize);
@@ -297,33 +292,21 @@ void jack_listdevs(void);
 void jack_client_name(char *name);
 void jack_autoconnect(int);
 
+int pulse_open_audio(int wantinchans, int wantoutchans, int srate, int blocksize);
+void pulse_close_audio(void);
+int pulse_send_dacs(void);
+void pulse_getdevs(char *indevlist, int *nindevs,
+    char *outdevlist, int *noutdevs, int *canmulti,
+        int maxndev, int devdescsize);
+void pulse_listdevs(void);
+void pulse_client_name(char *name);
+
 int mmio_open_audio(int naudioindev, int *audioindev,
     int nchindev, int *chindev, int naudiooutdev, int *audiooutdev,
     int nchoutdev, int *choutdev, int rate, int blocksize);
 void mmio_close_audio(void);
-void mmio_reportidle(void);
 int mmio_send_dacs(void);
 void mmio_getdevs(char *indevlist, int *nindevs,
-    char *outdevlist, int *noutdevs, int *canmulti,
-        int maxndev, int devdescsize);
-
-int audiounit_open_audio(int naudioindev, int *audioindev, int nchindev,
-    int *chindev, int naudiooutdev, int *audiooutdev, int nchoutdev,
-    int *choutdev, int rate);
-void audiounit_close_audio(void);
-int audiounit_send_dacs(void);
-void audiounit_listdevs(void);
-void audiounit_getdevs(char *indevlist, int *nindevs,
-    char *outdevlist, int *noutdevs, int *canmulti,
-        int maxndev, int devdescsize);
-
-int esd_open_audio(int naudioindev, int *audioindev, int nchindev,
-    int *chindev, int naudiooutdev, int *audiooutdev, int nchoutdev,
-    int *choutdev, int rate);
-void esd_close_audio(void);
-int esd_send_dacs(void);
-void esd_listdevs(void);
-void esd_getdevs(char *indevlist, int *nindevs,
     char *outdevlist, int *noutdevs, int *canmulti,
         int maxndev, int devdescsize);
 
@@ -341,8 +324,8 @@ EXTERN int sys_audioapi;
 EXTERN void sys_set_audio_state(int onoff);
 
 /* API dependent audio flags and settings */
-void oss_set32bit(void);
-void linux_alsa_devname(char *devname);
+const char*sys_set_audio_clientname(const char*default_name);
+const char*sys_get_audio_clientname(const char*default_name);
 
 EXTERN void sys_get_audio_params(
     int *pnaudioindev, int *paudioindev, int *chindev,

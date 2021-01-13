@@ -129,7 +129,7 @@ noinst_HEADERS = s_audio_alsa.h s_audio_paring.h s_utf8.h
 # we want these in the dist tarball
 EXTRA_DIST = CHANGELOG.txt notes.txt pd.rc \
     makefile.gnu  makefile.mac  makefile.mingw  makefile.msvc \
-    s_audio_audiounit.c s_audio_esd.c
+    $(empty)
 
 # add WISH define if it's set
 WISH=@WISH@
@@ -208,6 +208,14 @@ if ASIO
 # always Windows
 pd_LDADD_core += $(top_builddir)/asio/libasio.a
 endif
+
+##### Pulse Audio #####
+if PULSEAUDIO
+pd_CFLAGS += -DUSEAPI_PULSEAUDIO @PULSEAUDIO_CFLAGS@
+pd_LDADD_core += @PULSEAUDIO_LIBS@
+pd_SOURCES_core += s_audio_pulse.c
+endif
+
 
 ##### PortMidi #####
 if PORTMIDI

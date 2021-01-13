@@ -428,6 +428,7 @@ static char *(usagemessage[]) = {
 "-callback        -- use callbacks if possible\n",
 "-nocallback      -- use polling-mode (true by default)\n",
 "-listdev         -- list audio and MIDI devices\n",
+"-audioname       -- name under which Pd should appear (on systems that support it, e.g. JACK)",
 
 #ifdef USEAPI_OSS
 "-oss             -- use OSS audio API\n",
@@ -440,10 +441,13 @@ static char *(usagemessage[]) = {
 
 #ifdef USEAPI_JACK
 "-jack            -- use JACK audio API\n",
-"-jackname <name> -- a name for your JACK client\n",
+"-jackname <name> -- a name for your JACK client (shortcut for '-jack -audioname <name>')\n",
 "-nojackconnect   -- do not automatically connect pd to the JACK graph\n",
 "-jackconnect     -- automatically connect pd to the JACK graph [default]\n",
+#endif
 
+#ifdef USEAPI_PULSEAUDIO
+"-pulseaudio      -- use PulseAudio API\n",
 #endif
 
 #ifdef USEAPI_PORTAUDIO
@@ -459,13 +463,6 @@ static char *(usagemessage[]) = {
 "-mmio            -- use MMIO audio API (default for Windows)\n",
 #endif
 
-#ifdef USEAPI_AUDIOUNIT
-"-audiounit       -- use Apple AudioUnit API\n",
-#endif
-
-#ifdef USEAPI_ESD
-"-esd             -- use Enlightenment Sound Daemon (ESD) API\n",
-#endif
 
 "      (default audio API for this platform:  ", API_DEFSTRING, ")\n\n",
 
@@ -755,6 +752,15 @@ int sys_argparse(int argc, char **argv)
             sys_nchin = sys_nchout = 0;
             argc--; argv++;
         }
+        else if (!strcmp(*argv, "-audioname"))
+        {
+            if (argc < 2)
+                goto usage;
+
+            sys_set_audio_clientname(argv[1]);
+            argc -= 2; argv +=2;
+
+        }
 #ifdef USEAPI_OSS
         else if (!strcmp(*argv, "-oss"))
         {
@@ -827,7 +833,7 @@ int sys_argparse(int argc, char **argv)
             if (argc < 2)
                 goto usage;
 
-            sys_set_audio_api(API_JACK), jack_client_name(argv[1]);
+            sys_set_audio_api(API_JACK), sys_set_audio_clientname(argv[1]);
             argc -= 2; argv +=2;
 
         }
@@ -844,6 +850,19 @@ int sys_argparse(int argc, char **argv)
                 goto usage;
             fprintf(stderr, "Pd compiled without JACK-support, ignoring '%s' flag\n", *argv);
             argc -= 2; argv +=2;
+        }
+#endif
+#ifdef USEAPI_PULSEAUDIO
+        else if (!strcmp(*argv, "-pulseaudio"))
+        {
+            sys_set_audio_api(API_PULSEAUDIO);
+            argc--; argv++;
+        }
+#else
+        else if (!strcmp(*argv, "-pulseaudio"))
+        {
+            fprintf(stderr, "Pd compiled without PulseAudio-support, ignoring '%s' flag\n", *argv);
+            argc--; argv++;
         }
 #endif
 #ifdef USEAPI_PORTAUDIO
@@ -875,20 +894,6 @@ int sys_argparse(int argc, char **argv)
         else if (!strcmp(*argv, "-mmio"))
         {
             fprintf(stderr, "Pd compiled without MMIO-support, ignoring '%s' flag\n", *argv);
-            argc--; argv++;
-        }
-#endif
-#ifdef USEAPI_AUDIOUNIT
-        else if (!strcmp(*argv, "-audiounit"))
-        {
-            sys_set_audio_api(API_AUDIOUNIT);
-            argc--; argv++;
-        }
-#endif
-#ifdef USEAPI_ESD
-        else if (!strcmp(*argv, "-esd"))
-        {
-            sys_set_audio_api(API_ESD);
             argc--; argv++;
         }
 #endif
