@@ -109,7 +109,12 @@ static void canvas_objtext(t_glist *gl, int xpix, int ypix, int width,
             x = 0;
         else if (!(x = pd_checkobject(pd_this->pd_newest)))
         {
-            binbuf_print(b);
+            char *buf=0;
+            int bufsize=0;
+            binbuf_gettext(b, &buf, &bufsize);
+            buf = resizebytes(buf, bufsize, bufsize+1);
+            buf[bufsize] = 0;
+            logpost(0, 0, "%s", buf);
             error("... didn't return a patchable object");
         }
     }
@@ -119,7 +124,12 @@ static void canvas_objtext(t_glist *gl, int xpix, int ypix, int width,
         x = (t_text *)pd_new(text_class);
         if (binbuf_getnatom(b))
         {
-            binbuf_print(b);
+            char *buf=0;
+            int bufsize=0;
+            binbuf_gettext(b, &buf, &bufsize);
+            buf = resizebytes(buf, bufsize, bufsize+1);
+            buf[bufsize] = 0;
+            logpost(x, 0, "%s", buf);
             pd_error(x, "... couldn't create");
         }
     }
