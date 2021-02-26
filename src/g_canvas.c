@@ -35,17 +35,28 @@ typedef struct _canvas_private
     t_undo undo;
 } t_canvas_private;
 
-#define GLIST_DEFCANVASWIDTH 450
-#define GLIST_DEFCANVASHEIGHT 300
+#ifndef  GLIST_DEFCANVASWIDTH
+# define GLIST_DEFCANVASWIDTH 450
+#endif
+#ifndef  GLIST_DEFCANVASHEIGHT
+# define GLIST_DEFCANVASHEIGHT 300
+#endif
+#ifndef  GLIST_DEFCANVASXLOC
+# define GLIST_DEFCANVASXLOC 0
+#endif
+#ifndef  GLIST_DEFCANVASYLOC
+# define GLIST_DEFCANVASYLOC 50
+#endif
+
 
 /* since the window decorations aren't included, open new windows a few
 pixels down so you can possibly move the window later.  Apple needs less
 because its menus are at top of screen; we're more generous for other
 desktops because the borders have both window title area and menus. */
 #ifdef __APPLE__
-#define GLIST_DEFCANVASYLOC 22
+# define GLIST_DEFCANVASYLOC_ (GLIST_DEFCANVASYLOC - 28)
 #else
-#define GLIST_DEFCANVASYLOC 50
+# define GLIST_DEFCANVASYLOC_ (GLIST_DEFCANVASYLOC)
 #endif
 
 /* ---------------------- variables --------------------------- */
@@ -331,7 +342,7 @@ t_canvas *canvas_new(void *dummy, t_symbol *sel, int argc, t_atom *argv)
     t_canvas *owner = canvas_getcurrent();
     t_symbol *s = &s_;
     int vis = 0, width = GLIST_DEFCANVASWIDTH, height = GLIST_DEFCANVASHEIGHT;
-    int xloc = 0, yloc = GLIST_DEFCANVASYLOC;
+    int xloc = GLIST_DEFCANVASXLOC, yloc = GLIST_DEFCANVASYLOC_;
     int font = (owner ? owner->gl_font : sys_defaultfont);
     glist_init(x);
     x->gl_obj.te_type = T_OBJECT;
@@ -1062,8 +1073,8 @@ static void *subcanvas_new(t_symbol *s)
     t_atom a[6];
     t_canvas *x, *z = canvas_getcurrent();
     if (!*s->s_name) s = gensym("/SUBPATCH/");
-    SETFLOAT(a, 0);
-    SETFLOAT(a+1, GLIST_DEFCANVASYLOC);
+    SETFLOAT(a+0, GLIST_DEFCANVASXLOC);
+    SETFLOAT(a+1, GLIST_DEFCANVASYLOC_);
     SETFLOAT(a+2, GLIST_DEFCANVASWIDTH);
     SETFLOAT(a+3, GLIST_DEFCANVASHEIGHT);
     SETSYMBOL(a+4, s);
