@@ -116,6 +116,7 @@ static void canvas_objtext(t_glist *gl, int xpix, int ypix, int width,
             buf[bufsize] = 0;
             logpost(0, 0, "%s", buf);
             error("... didn't return a patchable object");
+            freebytes(buf, bufsize);
         }
     }
     else x = 0;
@@ -131,6 +132,7 @@ static void canvas_objtext(t_glist *gl, int xpix, int ypix, int width,
             buf[bufsize] = 0;
             logpost(x, 0, "%s", buf);
             pd_error(x, "... couldn't create");
+            freebytes(buf, bufsize);
         }
     }
     x->te_binbuf = b;
