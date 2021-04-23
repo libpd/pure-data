@@ -405,6 +405,7 @@ t_canvas *canvas_new(void *dummy, t_symbol *sel, int argc, t_atom *argv)
     }
     x->gl_willvis = vis;
     x->gl_edit = !strncmp(x->gl_name->s_name, "Untitled", 8);
+    x->gl_snaptogrid = 0;
     x->gl_font = sys_nearestfontsize(font);
     x->gl_zoom = (owner ? owner->gl_zoom : 1);
     pd_pushsym(&x->gl_pd);
