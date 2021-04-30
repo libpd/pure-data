@@ -474,9 +474,50 @@ static void pdcontrol_browse(t_pdcontrol *x, t_symbol *s)
     sys_gui(buf);
 }
 
-static void pdcontrol_isvisible(t_pdcontrol *x)
+static void pdcontrol_editmode(t_pdcontrol *x, t_floatarg f)
 {
-    outlet_float(x->x_outlet, glist_isvisible(x->x_canvas));
+    t_canvas *c = x->x_canvas;
+    int i;
+    for (i = 0; i < (int)f; i++)
+    {
+        if (c->gl_owner)    /* back up one more into an owner if any */
+            c = c->gl_owner;
+    }
+    outlet_float(x->x_outlet, c->gl_edit);
+}
+
+static void pdcontrol_version(t_pdcontrol *x)
+{
+    t_atom at[3];
+    int major = 0, minor = 0, bugfix = 0;
+    sys_getversion(&major, &minor, &bugfix);
+    SETFLOAT(at, major);
+    SETFLOAT(at+1, minor);
+    SETFLOAT(at+2, bugfix);
+    outlet_list(x->x_outlet, &s_list, 3, at);
+}
+
+static void pdcontrol_realizedollar(t_pdcontrol *x, t_symbol *s, t_floatarg f)
+{
+    t_canvas *c = x->x_canvas;
+    for (int i = 0; i < (int)f; i++)
+    {
+        if (c->gl_owner)  /* back up one more into an owner if any */
+            c = c->gl_owner;
+    }
+    outlet_symbol(x->x_outlet, canvas_realizedollar(c, s));
+}
+
+static void pdcontrol_isvisible(t_pdcontrol *x, t_floatarg f)
+{
+    t_canvas *c = x->x_canvas;
+    int i;
+    for (i = 0; i < (int)f; i++)
+    {
+        if (c->gl_owner)    /* back up one more into an owner if any */
+            c = c->gl_owner;
+    }
+    outlet_float(x->x_outlet, glist_isvisible(c));
 }
 
 static void pdcontrol_setup(void)
@@ -490,7 +531,13 @@ static void pdcontrol_setup(void)
     class_addmethod(pdcontrol_class, (t_method)pdcontrol_browse,
         gensym("browse"), A_SYMBOL, 0);
     class_addmethod(pdcontrol_class, (t_method)pdcontrol_isvisible,
-        gensym("isvisible"), 0);
+        gensym("isvisible"), A_DEFFLOAT , 0);
+    class_addmethod(pdcontrol_class, (t_method)pdcontrol_editmode,
+        gensym("editmode"), A_DEFFLOAT , 0);
+    class_addmethod(pdcontrol_class, (t_method)pdcontrol_version,
+        gensym("version"), 0);
+    class_addmethod(pdcontrol_class, (t_method)pdcontrol_realizedollar,
+        gensym("realizedollar"), A_SYMBOL, A_DEFFLOAT, 0);
 }
 
 /* -------------------------- setup routine ------------------------------ */
