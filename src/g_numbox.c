@@ -20,6 +20,11 @@
 #include <unistd.h>
 #endif
 
+#ifdef _MSC_VER
+#include <float.h>
+#define isnan _isnan
+#endif
+
 #define MINDIGITS 1
 #define MINFONT   4
 
@@ -51,10 +56,13 @@ static void my_numbox_tick_wait(t_my_numbox *x)
 
 void my_numbox_clip(t_my_numbox *x)
 {
-    if(x->x_val < x->x_min)
-        x->x_val = x->x_min;
-    if(x->x_val > x->x_max)
-        x->x_val = x->x_max;
+    if (x->x_min != 0 || x->x_max != 0)
+    {
+        if(x->x_val < x->x_min)
+            x->x_val = x->x_min;
+        if(x->x_val > x->x_max)
+            x->x_val = x->x_max;
+    }
 }
 
 void my_numbox_calc_fontwidth(t_my_numbox *x)
@@ -439,15 +447,18 @@ int my_numbox_check_minmax(t_my_numbox *x, double min, double max)
     }
     x->x_min = min;
     x->x_max = max;
-    if(x->x_val < x->x_min)
+    if(x->x_min != 0 || x->x_max != 0)
     {
-        x->x_val = x->x_min;
-        ret = 1;
-    }
-    if(x->x_val > x->x_max)
-    {
-        x->x_val = x->x_max;
-        ret = 1;
+        if(x->x_val < x->x_min)
+        {
+            x->x_val = x->x_min;
+            ret = 1;
+        }
+        if(x->x_val > x->x_max)
+        {
+            x->x_val = x->x_max;
+            ret = 1;
+        }
     }
     if(x->x_lin0_log1)
         x->x_k = exp(log(x->x_max/x->x_min) / (double)(x->x_log_height));
@@ -588,10 +599,16 @@ static int my_numbox_newclick(t_gobj *z, struct _glist *glist,
 
 static void my_numbox_set(t_my_numbox *x, t_floatarg f)
 {
-    if(x->x_val != f)
+    if(isnan(f))
     {
         x->x_val = f;
-        my_numbox_clip(x);
+        sys_queuegui(x, x->x_gui.x_glist, my_numbox_draw_update);
+    }
+    else if(x->x_val != f)
+    {
+        x->x_val = f;
+        if (pd_compatibilitylevel < 51)
+            my_numbox_clip(x);
         sys_queuegui(x, x->x_gui.x_glist, my_numbox_draw_update);
     }
 }
@@ -631,6 +648,7 @@ static void my_numbox_size(t_my_numbox *x, t_symbol *s, int ac, t_atom *av)
     }
     my_numbox_calc_fontwidth(x);
     iemgui_size((void *)x, &x->x_gui);
+    (*x->x_gui.x_draw)(x, x->x_gui.x_glist, IEM_GUI_DRAW_MODE_UPDATE);
 }
 
 static void my_numbox_delta(t_my_numbox *x, t_symbol *s, int ac, t_atom *av)
@@ -748,7 +766,8 @@ static void my_numbox_key(void *z, t_floatarg fkey)
         x->x_buf[0] = 0;
         x->x_gui.x_fsf.x_change = 0;
         clock_unset(x->x_clock_reset);
-        my_numbox_clip(x);
+        if (pd_compatibilitylevel < 51)
+            my_numbox_clip(x);
         my_numbox_bang(x);
         sys_queuegui(x, x->x_gui.x_glist, my_numbox_draw_update);
     }
@@ -774,7 +793,7 @@ static void *my_numbox_new(t_symbol *s, int argc, t_atom *argv)
     int lilo = 0, ldx = 0, ldy = -8;
     int fs = 10;
     int log_height = 256;
-    double min = -1.0e+37, max = 1.0e+37, v = 0.0;
+    double min = 0, max = 0, v = 0.0;
 
     x->x_gui.x_bcol = 0xFCFCFC;
     x->x_gui.x_fcol = 0x00;
