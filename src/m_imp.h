@@ -91,6 +91,9 @@ EXTERN t_float *obj_findsignalscalar(const t_object *x, int m);
 void pd_globallock(void);
 void pd_globalunlock(void);
 
+/* x_misc.c */
+EXTERN int float_strict_equal(t_float f1, t_float f2);
+
 /* misc */
 #ifndef SYMTABHASHSIZE  /* set this to, say, 1024 for small memory footprint */
 #define SYMTABHASHSIZE 16384
