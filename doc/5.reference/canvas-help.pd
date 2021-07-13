@@ -1,4 +1,4 @@
-#N canvas 309 39 1008 598 12;
+#N canvas 309 39 1015 600 12;
 #X obj 542 194 table;
 #X obj 61 548 table help-tab1 25;
 #X text 49 485 "Table" builds a subpatch with a graphical array inside.
@@ -10,7 +10,6 @@ The creation arguments specify the name and an optional size in points.
 #N canvas 1 51 450 300 (subpatch) 0;
 #X restore 102 28 pd;
 #X text 132 27 - subpatch;
-#X text 737 539 updated for Pd version 0.46;
 #X text 537 486 see also:;
 #X obj 610 486 array;
 #N canvas 307 173 430 250 foo 0;
@@ -18,13 +17,10 @@ The creation arguments specify the name and an optional size in points.
 #X obj 178 171 outlet;
 #X text 95 89 this is the subpatch window. Use "inlet" and "outlet"
 objects to create inlets/outlets on the parent., f 34;
-#X restore 102 296 pd foo;
+#X restore 102 196 pd foo;
 #X text 663 487 (newer and better replacement for "table").;
 #X text 203 548 <= optional creation args: name \, size;
-#N canvas 0 22 450 278 (subpatch) 0;
-#X coords 0 1 100 -1 200 140 1;
-#X restore 100 59 graph;
-#X text 310 64 - graph (subpatch with graph on parent), f 21;
+#X text 199 56 - graph (subpatch with graph on parent), f 21;
 #N canvas 0 22 450 278 (subpatch) 0;
 #X array array1 100 float 3;
 #A 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -33,7 +29,7 @@ objects to create inlets/outlets on the parent., f 34;
 0;
 #X coords 0 1 100 -1 200 140 1;
 #X restore 540 37 graph;
-#X text 54 412 The put menu allows you to create an array \, which
+#X text 48 408 The put menu allows you to create an array \, which
 needs a graph to be displayed. At creation \, you can specify if you
 want the array to be included in a new graph or in a graph previously
 created., f 59;
@@ -44,11 +40,62 @@ created., f 59;
 is a subpatch set to "graph on parent". A graph in Pd is a rectangular
 subregion of the window in which you can display GUIs and store numeric
 arrays.;
-#X text 48 243 By typing "pd" into an object box \, you create a subpatch.
+#X text 48 150 By typing "pd" into an object box \, you create a subpatch.
 An optional argument sets the subpatch name;
-#X text 159 297 <= click to open;
+#X text 159 197 <= click to open;
 #X text 530 262 Note that for the table object \, the data (and other
 properties) of the array aren't saved with the patch. You can resize
 \, save to and/or read from an external file as you would with "array"
 objects. See "arrays" in the 2.control examples under the "pure documentation"
 help menu item., f 63;
+#X text 737 538 updated for Pd version 0.51;
+#N canvas 522 136 450 300 bar 0;
+#X text 8 6 hello;
+#X text 96 6 world;
+#X obj 9 33 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
+-1;
+#X obj 9 125 print;
+#X msg 9 101 hello;
+#X obj 99 35 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
+-1;
+#X obj 99 127 print;
+#X msg 99 102 world;
+#X connect 2 0 4 0;
+#X connect 4 0 3 0;
+#X connect 5 0 7 0;
+#X connect 7 0 6 0;
+#X coords 0 -1 1 1 85 60 2 0 0;
+#X restore 101 57 pd bar;
+#N canvas 636 145 490 333 gop 0;
+#X msg 64 243 60;
+#X msg 28 268 \; pd-bar goprect 0 0 85 \$1;
+#X text 24 128 xmargin \, ymargin \, (width \, height);
+#X msg 27 190 \; pd-bar goprect \$1 0;
+#X msg 27 164 85;
+#X msg 63 165 0;
+#X text 137 242 change the height of the GOP rect;
+#X msg 28 242 80;
+#X msg 100 243 30;
+#X text 27 20 You can resize a GOP subpatch like any other object while
+in edit mode by dragging the arrow handle at the right edge.;
+#X text 24 61 Additionally \, you can set the size and position of
+the GOP rectangle in the properties (right click -> properties) or
+dynamically with the "goprect" message which takes the following arguments:
+;
+#X text 104 154 set the position of the GOP rect within the subpatch
+(= margins), f 33;
+#X connect 0 0 1 0;
+#X connect 4 0 3 0;
+#X connect 5 0 3 0;
+#X connect 7 0 1 0;
+#X connect 8 0 1 0;
+#X restore 285 97 pd gop;
+#X text 198 96 Learn more:;
+#X msg 54 258 \; pd-foo vis \$1;
+#X obj 54 235 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+1;
+#X text 164 265 show/hide the subpatch, f 23;
+#X text 50 302 Note that you need to prepend "pd-" to the subpatch
+name, f 57;
+#X text 77 232 A named subpatch can receive messages:;
+#X connect 27 0 26 0;
