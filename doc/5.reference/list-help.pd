@@ -1,4 +1,4 @@
-#N canvas 551 42 595 591 12;
+#N canvas 565 61 595 682 12;
 #X obj 35 15 list;
 #X text 82 16 - building and using variable-length messages;
 #N canvas 597 110 526 653 about-lists 0;
@@ -47,7 +47,7 @@ It's not clear whether this was a good design choice \, but it's entrenched.
 #X connect 6 0 4 0;
 #X connect 12 0 14 0;
 #X connect 13 0 14 0;
-#X restore 112 400 pd about-lists;
+#X restore 112 486 pd about-lists;
 #X obj 28 86 list append;
 #X obj 28 111 list prepend;
 #X obj 28 185 list trim;
@@ -202,11 +202,11 @@ f 33;
 #X connect 9 0 18 1;
 #X connect 18 0 5 0;
 #X restore 460 111 pd prepend;
-#X text 73 331 In general \, inlets that take lists (two each for append/prepend
+#X text 73 417 In general \, inlets that take lists (two each for append/prepend
 \, and one each for split and trim) will convert non-list messages
 (such as "set 5") to lists (such as "list set 5" automatically. Here's
 more about lists in Pd:;
-#X text 51 440 And here are some examples showing how to use these
+#X text 51 526 And here are some examples showing how to use these
 objects to compose and/or use variable length messages:;
 #N canvas 429 23 583 591 example1 0;
 #X obj 66 122 bng 17 250 50 0 empty empty empty 0 -6 0 8 -262144 -1
@@ -262,8 +262,8 @@ variable number of elements provided sequentially., f 52;
 #X connect 21 0 7 0;
 #X connect 22 0 21 0;
 #X connect 27 0 9 0;
-#X restore 229 491 pd example1;
-#X text 109 490 simple sequencer;
+#X restore 229 577 pd example1;
+#X text 109 576 simple sequencer;
 #N canvas 489 23 519 545 example2 0;
 #X obj 70 211 bng 17 250 50 0 empty empty empty 0 -6 0 8 -262144 -1
 -1;
@@ -317,9 +317,9 @@ list in a different way., f 64;
 #X connect 15 0 14 0;
 #X connect 15 1 10 1;
 #X connect 15 2 18 0;
-#X restore 229 517 pd example2;
-#X text 102 519 another sequencer;
-#X text 151 544 serializer;
+#X restore 229 603 pd example2;
+#X text 102 605 another sequencer;
+#X text 151 630 serializer;
 #N canvas 553 155 494 341 example3 0;
 #X obj 86 283 print;
 #X obj 73 169 until;
@@ -350,9 +350,9 @@ to its right inlet., f 38;
 #X connect 11 0 10 1;
 #X connect 12 0 10 1;
 #X connect 13 0 8 0;
-#X restore 229 544 pd example3;
-#X obj 39 293 list;
-#X text 76 294 - short for "list append";
+#X restore 229 630 pd example3;
+#X obj 39 379 list;
+#X text 76 380 - short for "list append";
 #X text 147 213 - output number of items in list;
 #N canvas 477 129 394 425 length 0;
 #X text 45 15 length - number of items in list;
@@ -382,7 +382,7 @@ in a list or other message., f 44;
 #X text 29 57 The list object's first argument sets its function:;
 #X obj 28 235 list fromsymbol;
 #X obj 28 260 list tosymbol;
-#X text 160 239 - convert symbols to/from numeric characters, f 25
+#X text 147 239 - convert symbols to/from numeric characters, f 25
 ;
 #N canvas 612 89 552 344 from/to 0;
 #X symbolatom 64 254 10 0 0 0 - - -;
@@ -459,5 +459,112 @@ list;
 #X connect 20 1 22 0;
 #X connect 27 0 20 0;
 #X restore 460 136 pd store;
-#X text 372 541 updated for Pd version 0.48;
 #X obj 28 136 list store;
+#X text 372 627 updated for Pd version 0.51;
+#X obj 25 342 list foreach;
+#X text 146 343 - output all items in sequence;
+#X obj 27 288 list join;
+#X obj 26 314 list unjoin;
+#X text 146 289 - convert lists to/from symbols with delimiters, f
+26;
+#N canvas 671 168 429 490 foreach 0;
+#X obj 29 99 list foreach;
+#X text 26 12 Foreach - output all list items in sequence;
+#X obj 119 130 print index;
+#X obj 29 130 print value;
+#X msg 29 45 1 2 3 4 5;
+#X msg 47 72 foo bar baz 1 2 3;
+#X text 183 72 anythings work as well;
+#X text 115 155 the index;
+#X obj 30 218 list foreach -1;
+#X obj 30 245 print value;
+#X msg 30 190 1 2 3 4 5;
+#X text 116 191 you can also iterate in reverse;
+#X obj 34 438 print value;
+#X msg 131 370 2;
+#X msg 35 315 1 2 3 4 5 6 7;
+#X msg 52 342 foo bar baz 1 2 3 4;
+#X floatatom 137 424 5 0 0 0 - - -;
+#X msg 134 396 -3;
+#X obj 34 407 list foreach;
+#X obj 124 452 print index;
+#X text 165 372 get pairs in sequence;
+#X text 167 397 get triples in reverse;
+#X text 33 274 The step size can be any number and you can change it
+dynamically with the second inlet., f 45;
+#X text 28 154 the items;
+#X connect 0 0 3 0;
+#X connect 0 1 2 0;
+#X connect 4 0 0 0;
+#X connect 5 0 0 0;
+#X connect 8 0 9 0;
+#X connect 10 0 8 0;
+#X connect 13 0 18 1;
+#X connect 14 0 18 0;
+#X connect 15 0 18 0;
+#X connect 16 0 18 1;
+#X connect 17 0 18 1;
+#X connect 18 0 12 0;
+#X connect 18 1 19 0;
+#X restore 462 347 pd foreach;
+#N canvas 616 218 562 525 join/unjoin 0;
+#X text 27 16 join and unjoin - convert lists from and to symbols;
+#X msg 26 101 1 2 3;
+#X msg 77 100 foo bar baz;
+#X symbolatom 102 134 10 0 0 0 - - -;
+#X symbolatom 26 164 16 0 0 0 - - -;
+#X obj 26 134 list join;
+#X msg 28 252 symbol /foo/bar/baz;
+#X text 186 101 The default delimiter is a single whitespace but you
+can choose any symbol (even an empty one!), f 34;
+#X obj 186 164 list join +;
+#X text 275 166 Set with creation argument;
+#X obj 28 278 list unjoin /;
+#X obj 28 304 print;
+#X symbolatom 226 367 6 0 0 0 - - -;
+#X floatatom 276 367 5 0 0 0 - - -;
+#X obj 186 313 list unjoin /;
+#X text 331 277 an empty delimiter will break a symbol into its characters:
+, f 30;
+#X obj 335 343 list unjoin;
+#X obj 427 319 loadbang;
+#X msg 427 343 symbol;
+#X obj 335 367 print;
+#X text 26 51 You can turn a list into a symbol by joining its items:
+, f 29;
+#X text 185 246 numbers are parsed as floats:, f 17;
+#X msg 186 286 symbol /1/a/2;
+#X obj 186 342 unpack f s f;
+#X floatatom 184 367 5 0 0 0 - - -;
+#X text 26 205 Conversely \, you can split a symbol into individual
+tokens based on a given delimiter:, f 47;
+#X msg 335 318 hallo;
+#X obj 182 452 list unjoin 0;
+#X obj 182 476 print;
+#X obj 26 443 print;
+#X obj 26 417 list unjoin /*/;
+#X msg 26 390 /*/a/*/b/*/c/*/;
+#X msg 182 425 a0b0c0d0;
+#X text 181 399 numbers also work:;
+#X text 23 338 delimiters don't have to be single characters:, f 18
+;
+#X connect 1 0 5 0;
+#X connect 2 0 5 0;
+#X connect 3 0 5 1;
+#X connect 5 0 4 0;
+#X connect 6 0 10 0;
+#X connect 10 0 11 0;
+#X connect 14 0 23 0;
+#X connect 16 0 19 0;
+#X connect 17 0 18 0;
+#X connect 18 0 16 1;
+#X connect 22 0 14 0;
+#X connect 23 0 24 0;
+#X connect 23 1 12 0;
+#X connect 23 2 13 0;
+#X connect 26 0 16 0;
+#X connect 27 0 28 0;
+#X connect 30 0 29 0;
+#X connect 31 0 30 0;
+#X connect 32 0 27 0;
+#X restore 461 298 pd join/unjoin;
