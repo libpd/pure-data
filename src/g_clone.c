@@ -176,7 +176,6 @@ static void clone_free(t_clone *x)
         }
         for (i = 0; i < x->x_n; i++)
         {
-            canvas_closebang(x->x_vec[i].c_gl);
             pd_free(&x->x_vec[i].c_gl->gl_pd);
             t_freebytes(x->x_outvec[i],
                 x->x_nout * sizeof(*x->x_outvec[i]));
