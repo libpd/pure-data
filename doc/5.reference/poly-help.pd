@@ -1,34 +1,71 @@
-#N canvas 473 88 573 394 12;
-#X text 329 318 updated for Pd version 0.25;
-#X text 51 323 see also:;
-#X obj 69 16 poly;
-#X text 33 49 The poly object takes a stream of pitch/velocity pairs
+#N canvas 473 88 643 573 12;
+#X text 29 529 see also:;
+#X obj 71 33 poly;
+#X text 110 32 - MIDI-STYLE POLYPHONIC VOICE ALLOCATOR;
+#X obj 107 530 route;
+#X obj 161 530 makenote;
+#X msg 32 163 60 64;
+#X msg 40 190 60 0;
+#X obj 32 462 pack 0 0 0;
+#X obj 32 488 print;
+#X text 77 487 Output is in the printout window.;
+#X msg 229 164 stop;
+#X msg 234 193 clear;
+#X msg 235 299 resize \$1;
+#X floatatom 235 272 5 0 0 0 - - -;
+#X text 281 273 change the number of voices;
+#X text 282 191 clear without flushing;
+#X text 271 163 flush all sounding notes;
+#X obj 236 225 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+1;
+#X obj 234 379 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+1;
+#X msg 80 163 61 64;
+#X msg 86 191 61 0;
+#X obj 32 436 poly 4 1 0;
+#X msg 128 163 62 64;
+#X msg 132 191 62 0;
+#X msg 176 163 63 64;
+#X msg 178 190 63 0;
+#X msg 234 349 sustain \$1;
+#X obj 234 327 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+1;
+#X text 320 350 0 will flush all sustained notes.;
+#X text 256 327 sustain on/off (like a piano sustain pedal);
+#X msg 236 246 steal \$1;
+#X text 310 299 (flushes excess notes);
+#X text 257 377 enable/disable stacking of sustained notes;
+#X msg 234 399 stack \$1;
+#X text 393 528 updated for Pd version 0.51.;
+#X text 130 435 <-- first argument \, number of voices \; second argument
+selects voice stealing (default: 0) \; third argument selects note
+stacking (default: 1);
+#X text 30 64 The poly object takes a stream of pitch/velocity pairs
 and outputs triples containing voice number \, pitch and velocity.
 You can pack the output and use the route object to route messages
 among a bank of voices depending on the first outlet. Poly can be configured
-to do voice stealing or not (the default.);
-#X obj 129 324 route;
-#X obj 183 324 makenote;
-#X obj 124 214 poly 4 1;
-#X text 222 214 <-- first argument \, number of voices \; second argument
-selects voice stealing;
-#X msg 73 158 60 64;
-#X msg 124 158 60 0;
-#X msg 168 158 62 64;
-#X msg 219 158 62 0;
-#X obj 124 240 pack 0 0 0;
-#X obj 124 266 print;
-#X text 169 265 Output is in the printout window.;
-#X msg 279 167 stop;
-#X msg 323 167 clear;
-#X text 108 15 - MIDI-style polyphonic voice allocator;
-#X connect 6 0 12 0;
-#X connect 6 1 12 1;
-#X connect 6 2 12 2;
-#X connect 8 0 6 0;
-#X connect 9 0 6 0;
-#X connect 10 0 6 0;
-#X connect 11 0 6 0;
-#X connect 12 0 13 0;
-#X connect 15 0 6 0;
-#X connect 16 0 6 0;
+to do voice stealing and note stacking.;
+#X text 259 223 enable/disable voice stealing (default: 0);
+#X text 307 397 with the same pitch (default: 1).;
+#X connect 5 0 21 0;
+#X connect 6 0 21 0;
+#X connect 7 0 8 0;
+#X connect 10 0 21 0;
+#X connect 11 0 21 0;
+#X connect 12 0 21 0;
+#X connect 13 0 12 0;
+#X connect 17 0 30 0;
+#X connect 18 0 33 0;
+#X connect 19 0 21 0;
+#X connect 20 0 21 0;
+#X connect 21 0 7 0;
+#X connect 21 1 7 1;
+#X connect 21 2 7 2;
+#X connect 22 0 21 0;
+#X connect 23 0 21 0;
+#X connect 24 0 21 0;
+#X connect 25 0 21 0;
+#X connect 26 0 21 0;
+#X connect 27 0 26 0;
+#X connect 30 0 21 0;
+#X connect 33 0 21 0;
