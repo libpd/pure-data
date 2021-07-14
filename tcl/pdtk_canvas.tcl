@@ -117,8 +117,26 @@ proc pdtk_canvas_new {mytoplevel width height geometry editable} {
     canvas $tkcanvas -width $width -height $height \
         -highlightthickness 0 -scrollregion [list 0 0 $width $height] \
         -xscrollcommand "$mytoplevel.xscroll set" \
-        -yscrollcommand "$mytoplevel.yscroll set" \
-        -background white
+        -yscrollcommand "$mytoplevel.yscroll set"
+    set tmpcol [::pdtk_canvas::get_color txt_highlight $mytoplevel]
+    if {$tmpcol ne ""} {
+        $tkcanvas configure -selectbackground $tmpcol
+    }
+    set tmpcol [::pdtk_canvas::get_color canvas_fill $mytoplevel]
+    if {$tmpcol ne ""} {
+        $tkcanvas configure -background $tmpcol
+    }
+    set tmpcol [::pdtk_canvas::get_color canvas_text_cursor $mytoplevel]
+    if {$tmpcol ne ""} {
+        $tkcanvas configure -insertbackground $tmpcol
+    }
+    #in Tk 8.6 the selectforeground is set by the os theme?
+    set tmpcol [::pdtk_canvas::get_color txt_highlight_front $mytoplevel]
+    if {$tmpcol ne ""} {
+        $tkcanvas configure -selectforeground \
+        	[::pdtk_canvas::get_color txt_highlight_front $mytoplevel]
+    }
+
     scrollbar $mytoplevel.xscroll -orient horizontal -command "$tkcanvas xview"
     scrollbar $mytoplevel.yscroll -orient vertical -command "$tkcanvas yview"
     pack $tkcanvas -side left -expand 1 -fill both
@@ -427,4 +445,10 @@ proc ::pdtk_canvas::pdtk_canvas_reflecttitle {mytoplevel \
         if {$dirty} {set dirtychar "*"} else {set dirtychar " "}
         wm title $mytoplevel "$name$dirtychar$arguments - $path"
     }
+}
+
+#------------------------------------------------------------------------------#
+# get color value for pd
+proc ::pdtk_canvas::get_color {type {window 0}} {
+	return $::pd_colors($type)
 }
