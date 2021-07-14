@@ -2071,6 +2071,32 @@ t_pd *glob_evalfile(t_pd *ignore, t_symbol *name, t_symbol *dir)
     return x;
 }
 
+t_pd *glob_evaltext(const char *data, size_t length, t_symbol *name, t_symbol *dir)
+{
+    t_pd *x = 0, *boundx;
+    int dspstate;
+
+    /* even though binbuf_evalfile appears to take care of dspstate,
+    we have to do it again here, because canvas_startdsp() assumes
+    that all toplevel canvases are visible.  LATER check if this
+    is still necessary -- probably not. */
+    dspstate = canvas_suspend_dsp();
+    boundx = s__X.s_thing;
+    s__X.s_thing = 0;       /* don't save #X; we'll need to leave it bound
+                            for the caller to grab it. */
+    binbuf_evaltext(data, length, name, dir);
+    while ((x != s__X.s_thing) && s__X.s_thing)
+    {
+        x = s__X.s_thing;
+        vmess(x, gensym("pop"), "i", 1);
+    }
+    if (!sys_noloadbang)
+        pd_doloadbang();
+    canvas_resume_dsp(dspstate);
+    s__X.s_thing = boundx;
+    return x;
+}
+
     /* open a file as if from an open dialog from the GUI.  If the optional
     argument "f" is nonzero, first check if the file is already open and if
     so, just "vis" it.  This would be useful if you want merely to make sure a
