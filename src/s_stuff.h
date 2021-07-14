@@ -41,6 +41,7 @@ extern int sys_verbose;
 extern int sys_noloadbang;
 EXTERN int sys_havegui(void);
 extern char *sys_guicmd;
+extern int sys_eventloop;
 
 EXTERN int sys_nearestfontsize(int fontsize);
 
@@ -426,3 +427,13 @@ struct _instancestuff
  * 'srclen' can be 0, in which case the 'src' string must be 0-terminated.
  */
 EXTERN char*pdgui_strnescape(char* dst, size_t dstlen, const char*src, size_t srclen);
+
+/* For now, the event loop is only implemented for macOS (see s_macos.mm) where it is
+ * badly needed (because the GUI event loop *must* run on the main thread).
+ * A Windows and Linux implementation might follow later, together with API methods for
+ * dispatching function calls to the UI thread (similar to "dispatch_async_f" on macOS) */
+#ifdef PD_EVENTLOOP
+void sys_eventloop_setup(void);
+void sys_eventloop_run(void);
+void sys_eventloop_quit(void);
+#endif
