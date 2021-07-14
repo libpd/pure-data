@@ -1,4 +1,4 @@
-#N canvas 551 141 527 649 12;
+#N canvas 546 81 527 700 12;
 #X msg 56 14 message boxes;
 #X text 38 42 Message boxes hold one or more message. Anytime the message
 box receives any message at all \, the messages in the box are all
@@ -6,7 +6,7 @@ sent to their destinations.;
 #X obj 128 318 print;
 #X msg 128 258 60 64;
 #X msg 128 288 pitch \$1 \, velocity \$2;
-#X msg 73 417 123 \; my-receiver-name 858 \; another-receiver -45;
+#X msg 73 475 123 \; my-receiver-name 858 \; another-receiver -45;
 #X text 38 90 Clicking on a message also sends it \, so you can use
 message boxes for push buttons. For instance \, click here while watching
 the printout window:;
@@ -15,16 +15,15 @@ the printout window:;
 #X text 34 213 You can separate multiple messages by commas. Also \,
 you can use "\$1" \, "\$2" \, etc. to make variable messages:, f 56
 ;
-#X text 45 348 Finally \, if you separate messages by a semicolon instead
+#X text 45 406 Finally \, if you separate messages by a semicolon instead
 of a comma \, the following message(s) are re-routed to named objects
 such as "receives":;
-#X obj 73 472 print;
-#X obj 277 417 receive my-receiver-name;
-#X floatatom 277 441 0 0 0 0 - - -;
-#X floatatom 276 488 0 0 0 0 - - -;
-#X obj 276 464 receive another-receiver;
-#X text 296 597 updated for Pd version 0.39;
-#X text 53 527 You can send messages to message boxes to change their
+#X obj 73 530 print;
+#X obj 277 475 receive my-receiver-name;
+#X floatatom 277 499 0 0 0 0 - - -;
+#X floatatom 276 546 0 0 0 0 - - -;
+#X obj 276 522 receive another-receiver;
+#X text 53 585 You can send messages to message boxes to change their
 content - open the subpatch below for details:, f 41;
 #N canvas 614 207 611 440 changing-messages 0;
 #X msg 49 373 dog bird monkey \; bird;
@@ -57,12 +56,18 @@ semicolon, f 36;
 #X connect 12 0 0 0;
 #X connect 13 0 0 0;
 #X connect 14 0 0 0;
-#X restore 67 584 pd changing-messages;
+#X restore 67 642 pd changing-messages;
 #X text 177 178 <= object (different border);
 #X text 222 148 <= message;
+#X text 296 655 updated for Pd version 0.52;
+#X msg 292 344 \$0;
+#X obj 292 368 print;
+#X text 44 347 Since Pd 0.52 \, a \$0 in a message box expands to the
+canvas \$0:, f 33;
 #X connect 3 0 4 0;
 #X connect 4 0 2 0;
 #X connect 5 0 11 0;
 #X connect 7 0 8 0;
 #X connect 12 0 13 0;
 #X connect 15 0 14 0;
+#X connect 21 0 22 0;
